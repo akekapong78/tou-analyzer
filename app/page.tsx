@@ -15,7 +15,7 @@ export default function Page() {
             
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-3xl font-extrabold text-purple-900 tracking-tight">
-            TOU Data Analysis Tool 🔑
+            ⚡️ TOU Analyzer Tool ⚡️
           </h1>
           <Navbar active={menu} onChange={setMenu} />
         </div>

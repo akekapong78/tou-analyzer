@@ -12,6 +12,7 @@ const holidaySet = new Set<string>(
 );
 
 export function getRateTOU(dateStr: string, dateFormat: string): "P" | "OP" | "H" | "error" {
+  // handle only datetime
   let normalized = dateStr
     .replace(/\u00A0/g, " ") // nbsp
     .replace(/\t/g, " ")     // 🔑 TAB จาก Excel

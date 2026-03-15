@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Timestamp TOU App",
-  description: "Timestamp TOU by P, OP, H Rate",
+  title: "TOU Analyzer",
+  description: "TOU Analyzer tool for calculating rates by Load Profile Data",
 };
 
 export default function RootLayout({

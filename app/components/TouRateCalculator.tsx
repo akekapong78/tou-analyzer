@@ -12,6 +12,7 @@ import HolidayModal from "./HolidayModal";
 import { AlertModal } from "./AlertModal";
 import { FORMAT_OPTIONS } from "../constanst/datetime";
 import holidays from "@/app/data/holidays.json";
+import Summary from "./Summary";
 
 export default function TouRateCalculator() {
   const [input, setInput] = useState("");
@@ -182,7 +183,7 @@ export default function TouRateCalculator() {
 
           </section>
 
-          {/* Result */}
+          {/* Result Table */}
           {rows.length > 0 && (
             <section className="rounded-2xl bg-white p-6 shadow-sm border border-purple-100 space-y-4">
               <div className="flex items-center justify-between">

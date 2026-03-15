@@ -12,6 +12,7 @@ import { CalendarDays, Eye } from "lucide-react";
 import { detectDefaultFormat } from "@/app/utils/helper";
 import DownloadCSV from "./ExportDataButton";
 import ResultTable from "./ResultTable";
+import Summary from "./Summary";
 
 export default function ShiftKWCalculator() {
   const [input, setInput] = useState("");
@@ -45,17 +46,38 @@ export default function ShiftKWCalculator() {
     const parsed = input
       .split(/\r?\n/)
       .map(line => {
-        const [d, t, val] = line.split(/\s+/);
-        return { datetime: d+" "+t, value: Number(val) };
-      });
+        const parts = line
+          .replace(/\u00A0/g, " ")
+          .replace(/\t/g, " ")
+          .trim()
+          .split(/\s+/);
 
-    const nonZero = parsed.filter(r => r.value !== 0);
+        if (parts.length < 3) return null;
+
+        const datetime = parts[0] + " " + parts[1];
+        const value = Number(parts[2]);
+
+        return { datetime, value };
+      })
+      .filter(Boolean);
+
+    if (parsed.length === 0) {
+      setAlert({
+        type: "warning",
+        title: "Warning",
+        message: "No valid data found. Please check your input format.",
+      });
+      setOpenAlert(true);
+      return;
+    }
+
+    const nonZero = parsed.filter(r => r!.value !== 0);
     const result: Row[] = parsed.map((r, i) => ({
-      datetime: r.datetime,
+      datetime: r!.datetime,
       value: i >= parsed.length - nonZero.length
-        ? nonZero[i - (parsed.length - nonZero.length)].value
+        ? nonZero[i - (parsed.length - nonZero.length)]!.value
         : null,
-      rate: getRateTOU(r.datetime, dateFormat),
+      rate: getRateTOU(r!.datetime, dateFormat),
     }));
 
     setRows(result);
@@ -198,7 +220,21 @@ export default function ShiftKWCalculator() {
 
           </section>
 
-          {/* Result */}
+
+          {/* Summary */}
+          {rows.length > 0 && (
+            <section className="rounded-2xl bg-white p-6 shadow-sm border border-purple-100 space-y-4">
+
+              <h2 className="text-lg font-semibold text-purple-800">
+                Summary
+              </h2>
+
+              <Summary rows={rows} />
+
+            </section>
+          )}
+
+          {/* Result Table */}
           {rows.length > 0 && (
             <section className="rounded-2xl bg-white p-6 shadow-sm border border-purple-100 space-y-4">
               <div className="flex items-center justify-between">
