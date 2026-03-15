@@ -54,6 +54,7 @@ export default function ShiftKWCalculator() {
 
         if (parts.length < 3) return null;
 
+        parts[1] = parts[1].replace(".", ":"); // for : dayjs can parse "23/04/2025 08.00" but not "23/04/2025 08:00"
         const datetime = parts[0] + " " + parts[1];
         const value = Number(parts[2]);
 
