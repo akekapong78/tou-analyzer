@@ -35,11 +35,11 @@ function buildMonthSummary(month: string, data: Row[]): MonthSummary {
   const max =
     peakRows.length > 0
       ? peakRows.reduce((a, b) =>
-          (a.value ?? 0) > (b.value ?? 0) ? a : b
-        )
+        (a.value ?? 0) > (b.value ?? 0) ? a : b
+      )
       : data.reduce((a, b) =>
-          (a.value ?? 0) > (b.value ?? 0) ? a : b
-        );
+        (a.value ?? 0) > (b.value ?? 0) ? a : b
+      );
 
   let cumulative = 0;
 
@@ -123,7 +123,7 @@ export default function Summary({ rows }: Props) {
         : months.find((m) => m.month === selectedMonth),
     [months, rows, selectedMonth]
   );
-  
+
 
   if (!current) return null;
 
@@ -156,7 +156,7 @@ export default function Summary({ rows }: Props) {
             Max Demand ({current.maxKWRate})
           </div>
           <div className="text-xl font-semibold" style={{ color: rateColor[current.maxKWRate] }}>
-            { current.maxKW > 1 ? current.maxKW.toFixed(4) : current.maxKW.toFixed(6) } kW
+            {current.maxKW > 1 ? current.maxKW.toLocaleString('en-US', { minimumFractionDigits: 4 }) : current.maxKW.toFixed(6)} kW
           </div>
           <div className="text-gray-600 text-xs">
             (on {dayjs(current.maxDatetime).format("DD/MM/YYYY HH:mm")})
@@ -169,15 +169,15 @@ export default function Summary({ rows }: Props) {
           <ul className="mt-1 space-y-1">
 
             <li style={{ color: rateColor.P }}>
-              P : <b>{current.kwh.P.toFixed(4)}</b> kWh
+              P : <b>{current.kwh.P.toLocaleString('en-US', { minimumFractionDigits: 4 })}</b> kWh
             </li>
 
             <li style={{ color: rateColor.OP }}>
-              OP : <b>{current.kwh.OP.toFixed(4)}</b> kWh
+              OP : <b>{current.kwh.OP.toLocaleString('en-US', { minimumFractionDigits: 4 })}</b> kWh
             </li>
 
             <li style={{ color: rateColor.H }}>
-              H : <b>{current.kwh.H.toFixed(4)}</b> kWh
+              H : <b>{current.kwh.H.toLocaleString('en-US', { minimumFractionDigits: 4 })}</b> kWh
             </li>
 
           </ul>
@@ -190,7 +190,7 @@ export default function Summary({ rows }: Props) {
         <div>
           <div className="text-gray-600 font-bold">Total Energy</div>
           <div className="text-xl font-bold text-orange-500">
-            {(current.kwh.P + current.kwh.OP + current.kwh.H).toFixed(4)} kWh
+            {(current.kwh.P + current.kwh.OP + current.kwh.H).toLocaleString('en-US', { minimumFractionDigits: 4 })} kWh
           </div>
         </div>
 

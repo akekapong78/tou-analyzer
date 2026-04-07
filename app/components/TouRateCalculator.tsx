@@ -13,6 +13,7 @@ import { AlertModal } from "./AlertModal";
 import { FORMAT_OPTIONS } from "../constanst/datetime";
 import holidays from "@/app/data/holidays.json";
 import Summary from "./Summary";
+import LoadingOverlay from "./LoadingOverlay";
 
 export default function TouRateCalculator() {
   const [input, setInput] = useState("");
@@ -25,14 +26,18 @@ export default function TouRateCalculator() {
     type: "success",
     title: "",
     message: "",
-  })
+  });
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const handleReset = () => {
     setRows([]);
     setInput("");
   }
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     if (!input) {
       setAlert({
         type: "warning",
@@ -40,6 +45,7 @@ export default function TouRateCalculator() {
         message: "Please input datetime",
       });
       setOpenAlert(true);
+      setIsProcessing(false);
       return;
     }
 
@@ -69,6 +75,7 @@ export default function TouRateCalculator() {
         message: "No valid data found. Please check your input format.",
       });
       setOpenAlert(true);
+      setIsProcessing(false);
       return;
     }
 
@@ -93,16 +100,19 @@ export default function TouRateCalculator() {
         message: "Please check your datetime",
       });
       setOpenAlert(true);
+      setIsProcessing(false);
       return;
     }
 
-    // open modal
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     setAlert({
       type: "success",
       title: "Success",
       message: "Result is ready",
-    })
+    });
     setOpenAlert(true);
+    setIsProcessing(false);
   };
 
   return (
@@ -210,14 +220,12 @@ export default function TouRateCalculator() {
               </button>
               <button
                 onClick={handleProcess}
-                className="rounded-xl bg-purple-700 px-6 py-2.5
-                          text-sm font-semibold text-white
-                          hover:bg-purple-800 cursor-pointer
-                          transition"
-                title="Process"
+                disabled={isProcessing}
+                className={`rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition ${isProcessing ? "bg-purple-500 cursor-not-allowed opacity-80" : "bg-purple-700 hover:bg-purple-800 cursor-pointer"}`}
+                title={isProcessing ? "Processing..." : "Process"}
                 aria-label="Process"
               >
-                Process
+                {isProcessing ? "Processing..." : "Process"}
               </button>
             </div>
 
@@ -264,7 +272,9 @@ export default function TouRateCalculator() {
         message={alert.message}
         onConfirm={() => console.log("confirmed")}
         onClose={() => setOpenAlert(false)}
-      />;
+      />
+      
+      <LoadingOverlay open={isProcessing} label="Processing data..." />
     </>
   );
 }

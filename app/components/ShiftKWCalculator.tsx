@@ -13,6 +13,7 @@ import { detectDefaultFormat } from "@/app/utils/helper";
 import DownloadCSV from "./ExportDataButton";
 import ResultTable from "./ResultTable";
 import Summary from "./Summary";
+import LoadingOverlay from "./LoadingOverlay";
 
 export default function ShiftKWCalculator() {
   const [input, setInput] = useState("");
@@ -25,14 +26,18 @@ export default function ShiftKWCalculator() {
     type: "success",
     title: "",
     message: "",
-  })
+  });
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleReset = () => {
     setRows([]);
     setInput("");
   }
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     if (!input) {
       setAlert({
         type: "warning",
@@ -40,6 +45,7 @@ export default function ShiftKWCalculator() {
         message: "Please input datetime and value",
       });
       setOpenAlert(true);
+      setIsProcessing(false);
       return;
     }
 
@@ -69,6 +75,7 @@ export default function ShiftKWCalculator() {
         message: "No valid data found. Please check your input format.",
       });
       setOpenAlert(true);
+      setIsProcessing(false);
       return;
     }
 
@@ -97,16 +104,20 @@ export default function ShiftKWCalculator() {
         message: "Please check your datetime or value",
       });
       setOpenAlert(true);
+      setIsProcessing(false);
       return;
     }
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // open modal
     setAlert({
       type: "success",
       title: "Success",
       message: "Result is ready",
-    })
+    });
     setOpenAlert(true);
+    setIsProcessing(false);
   };
 
   return (
@@ -215,14 +226,12 @@ export default function ShiftKWCalculator() {
               </button>
               <button
                 onClick={handleProcess}
-                className="rounded-xl bg-purple-700 px-6 py-2.5
-                          text-sm font-semibold text-white
-                          hover:bg-purple-800 cursor-pointer
-                          transition"
-                title="Process"
+                disabled={isProcessing}
+                className={`rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition ${isProcessing ? "bg-purple-500 cursor-not-allowed opacity-80" : "bg-purple-700 hover:bg-purple-800 cursor-pointer"}`}
+                title={isProcessing ? "Processing..." : "Process"}
                 aria-label="Process"
               >
-                Process
+                {isProcessing ? "Processing..." : "Process"}
               </button>
             </div>
 
@@ -270,7 +279,9 @@ export default function ShiftKWCalculator() {
         message={alert.message}
         onConfirm={() => console.log("confirmed")}
         onClose={() => setOpenAlert(false)}
-      />;
+      />
+
+      <LoadingOverlay open={isProcessing} label="Processing data..." />
     </>
   );
 }
