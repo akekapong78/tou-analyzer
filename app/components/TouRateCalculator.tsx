@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getRateTOU } from "@/app/utils/tou";
+import { getRateTOU, parseDatetimeToISO } from "@/app/utils/tou";
 import ResultTable from "./ResultTable";
 import DownloadCSV from "./ExportDataButton";
 import { detectDefaultFormat } from "@/app/utils/helper";
@@ -72,11 +72,17 @@ export default function TouRateCalculator() {
       return;
     }
 
-    const result: Row[] = parsed.map((r, i) => ({
-      datetime: r!.datetime,
-      value: r!.value,
-      rate: getRateTOU(r!.datetime, dateFormat),
-    }));
+    const result: Row[] = parsed.map((r) => {
+      const canonicalDatetime = parseDatetimeToISO(r!.datetime, dateFormat);
+
+      return {
+        datetime: canonicalDatetime ?? r!.datetime,
+        value: r!.value,
+        rate: canonicalDatetime
+          ? getRateTOU(canonicalDatetime, "YYYY-MM-DD HH:mm")
+          : "error",
+      };
+    });
 
     setRows(result);
 

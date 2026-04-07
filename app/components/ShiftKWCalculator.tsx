@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Row } from "../interface/data";
 import { FORMAT_OPTIONS } from "../constanst/datetime";
-import { getRateTOU } from "../utils/tou";
+import { getRateTOU, parseDatetimeToISO } from "../utils/tou";
 import HolidayModal from "./HolidayModal";
 import { AlertModal } from "./AlertModal";
 import { AlertMessage } from "../interface/modal";
@@ -73,13 +73,20 @@ export default function ShiftKWCalculator() {
     }
 
     const nonZero = parsed.filter(r => r!.value !== 0);
-    const result: Row[] = parsed.map((r, i) => ({
-      datetime: r!.datetime,
-      value: i >= parsed.length - nonZero.length
-        ? nonZero[i - (parsed.length - nonZero.length)]!.value
-        : null,
-      rate: getRateTOU(r!.datetime, dateFormat),
-    }));
+    const result: Row[] = parsed.map((r, i) => {
+      const canonicalDatetime = parseDatetimeToISO(r!.datetime, dateFormat);
+      const datetime = canonicalDatetime ?? r!.datetime;
+
+      return {
+        datetime,
+        value: i >= parsed.length - nonZero.length
+          ? nonZero[i - (parsed.length - nonZero.length)]!.value
+          : null,
+        rate: canonicalDatetime
+          ? getRateTOU(canonicalDatetime, "YYYY-MM-DD HH:mm")
+          : "error",
+      };
+    });
 
     setRows(result);
 

@@ -2,6 +2,7 @@
 
 import dayjs from "dayjs";
 import { MonthSummary, Row } from "../interface/data";
+import { ALL_PARSE_FORMATS } from "../utils/tou";
 import {
   LineChart,
   Line,
@@ -26,80 +27,101 @@ const rateColor = {
   KWH: "#f59e0b",
 };
 
+const ALL_MONTHS_KEY = "all";
+
+function buildMonthSummary(month: string, data: Row[]): MonthSummary {
+  const peakRows = data.filter((r) => r.rate === "P");
+
+  const max =
+    peakRows.length > 0
+      ? peakRows.reduce((a, b) =>
+          (a.value ?? 0) > (b.value ?? 0) ? a : b
+        )
+      : data.reduce((a, b) =>
+          (a.value ?? 0) > (b.value ?? 0) ? a : b
+        );
+
+  let cumulative = 0;
+
+  const chart = data.map((r) => {
+    const kw = r.value ?? 0;
+    const kwh = kw / 4;
+
+    cumulative += kwh;
+
+    return {
+      datetime: r.datetime,
+      date: dayjs(r.datetime, ALL_PARSE_FORMATS, true).format("MM/DD HH:mm"),
+      kw,
+      kwP: r.rate === "P" ? kw : null,
+      kwOP: r.rate === "OP" ? kw : null,
+      kwH: r.rate === "H" ? kw : null,
+      kwh: cumulative,
+    };
+  });
+
+  const kwhRate = { P: 0, OP: 0, H: 0 };
+
+  data.forEach((r) => {
+    const energy = (r.value ?? 0) / 4;
+
+    if (r.rate === "P") kwhRate.P += energy;
+    if (r.rate === "OP") kwhRate.OP += energy;
+    if (r.rate === "H") kwhRate.H += energy;
+  });
+
+  return {
+    month,
+    maxKW: max.value ?? 0,
+    maxKWRate: max.rate as "P" | "OP" | "H" | "KWH",
+    maxDatetime: max.datetime,
+    kwh: kwhRate,
+    chart,
+  };
+}
+
 function groupByMonth(rows: Row[]): MonthSummary[] {
   const map: Record<string, Row[]> = {};
 
   rows.forEach((r) => {
     if (r.value == null) return;
 
-    const m = dayjs(r.datetime).format("YYYY-MM");
+    const parsed = dayjs(r.datetime, ALL_PARSE_FORMATS, true);
+    const m = parsed.isValid() ? parsed.format("YYYY-MM") : r.datetime;
 
     if (!map[m]) map[m] = [];
 
     map[m].push(r);
   });
 
-  return Object.entries(map).map(([month, data]) => {
-    const peakRows = data.filter((r) => r.rate === "P");
+  return Object.entries(map).map(([month, data]) => buildMonthSummary(month, data));
+}
 
-    const max =
-      peakRows.length > 0
-        ? peakRows.reduce((a, b) =>
-            (a.value ?? 0) > (b.value ?? 0) ? a : b
-          )
-        : data.reduce((a, b) =>
-            (a.value ?? 0) > (b.value ?? 0) ? a : b
-          );
+function buildAllMonthsSummary(rows: Row[]): MonthSummary | null {
+  const data = rows.filter((r) => r.value != null);
+  if (data.length === 0) return null;
 
-    let cumulative = 0;
+  const sortedData = [...data].sort((a, b) => {
+    const da = dayjs(a.datetime, ALL_PARSE_FORMATS, true);
+    const db = dayjs(b.datetime, ALL_PARSE_FORMATS, true);
 
-    const chart = data.map((r) => {
-      const kw = r.value ?? 0;
-      const kwh = kw / 4;
-
-      cumulative += kwh;
-
-      return {
-        datetime: r.datetime,
-        date: dayjs(r.datetime).format("MM/DD HH:mm"),
-        kw,
-        kwP: r.rate === "P" ? kw : null,
-        kwOP: r.rate === "OP" ? kw : null,
-        kwH: r.rate === "H" ? kw : null,
-        kwh: cumulative,
-      };
-    });
-
-    const kwhRate = { P: 0, OP: 0, H: 0 };
-
-    data.forEach((r) => {
-      const energy = (r.value ?? 0) / 4;
-
-      if (r.rate === "P") kwhRate.P += energy;
-      if (r.rate === "OP") kwhRate.OP += energy;
-      if (r.rate === "H") kwhRate.H += energy;
-    });
-
-    return {
-      month,
-      maxKW: max.value ?? 0,
-      maxKWRate: max.rate as "P" | "OP" | "H" | "KWH",
-      maxDatetime: max.datetime,
-      kwh: kwhRate,
-      chart,
-    };
+    if (!da.isValid() || !db.isValid()) return 0;
+    return da.diff(db);
   });
+
+  return buildMonthSummary(ALL_MONTHS_KEY, sortedData);
 }
 
 export default function Summary({ rows }: Props) {
   const months = useMemo(() => groupByMonth(rows), [rows]);
 
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const activeMonth = selectedMonth ?? months[0]?.month;
-
+  const [selectedMonth, setSelectedMonth] = useState<string>(ALL_MONTHS_KEY);
   const current = useMemo(
-    () => months.find((m) => m.month === activeMonth),
-    [months, activeMonth]
+    () =>
+      selectedMonth === ALL_MONTHS_KEY
+        ? buildAllMonthsSummary(rows)
+        : months.find((m) => m.month === selectedMonth),
+    [months, rows, selectedMonth]
   );
   
 
@@ -114,9 +136,10 @@ export default function Summary({ rows }: Props) {
       {months.length > 1 && (
         <select
           className="border rounded px-3 py-2 text-lg font-bold text-purple-800 ring-2 ring-purple-400"
-          value={activeMonth}
+          value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
         >
+          <option value={ALL_MONTHS_KEY}>รวมทั้งหมด</option>
           {months.map((m) => (
             <option key={m.month} value={m.month}>
               {dayjs(m.month).format("MMMM YYYY")}
