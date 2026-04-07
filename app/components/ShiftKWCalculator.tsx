@@ -37,6 +37,7 @@ export default function ShiftKWCalculator() {
   const handleProcess = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
+    await new Promise(requestAnimationFrame);
 
     if (!input) {
       setAlert({

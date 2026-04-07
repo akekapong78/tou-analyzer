@@ -37,6 +37,7 @@ export default function TouRateCalculator() {
   const handleProcess = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
+    await new Promise(requestAnimationFrame);
 
     if (!input) {
       setAlert({
@@ -273,7 +274,7 @@ export default function TouRateCalculator() {
         onConfirm={() => console.log("confirmed")}
         onClose={() => setOpenAlert(false)}
       />
-      
+
       <LoadingOverlay open={isProcessing} label="Processing data..." />
     </>
   );
