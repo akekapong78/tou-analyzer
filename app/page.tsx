@@ -21,7 +21,12 @@ export default function Page() {
         </div>
     
         <div className="transition-all duration-300">
-          {menu === "tou" ? <TouRateCalculator /> : <ShiftKWCalculator />}
+          <div className={menu === "tou" ? "block" : "hidden"}>
+            <TouRateCalculator />
+          </div>
+          <div className={menu === "shift" ? "block" : "hidden"}>
+            <ShiftKWCalculator />
+          </div>
         </div>
       </div>
   
